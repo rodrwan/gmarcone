@@ -1,0 +1,29 @@
+{
+  "name": "gmarcone",
+  "version": "0.0.1",
+  "description": "API to share forecast data",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rodrwan/gmarcone.git"
+  },
+  "author": "Rodrigo Fuenzalida <rfuenzalidac87@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rodrwan/gmarcone/issues"
+  },
+  "homepage": "https://github.com/rodrwan/gmarcone#readme",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.4",
+    "dotenv": "^6.0.0",
+    "express": "^4.16.3",
+    "morgan": "^1.9.1",
+    "node-fetch": "^2.2.0",
+    "redis": "^2.8.0"
+  }
+}
