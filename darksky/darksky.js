@@ -2,8 +2,17 @@ const fetch = require('node-fetch');
 const querystring = require('querystring');
 
 const { DARKSKY_API_URL, DARKSKY_API_CALLS } = process.env;
-
+/*
+  Darksky is a simple HTTP client that allow to communicate with darksky API.
+  Also, result are inserted into a redis cache, in order to speed responses and make
+  less request to the API service.
+*/
 class Darksky {
+  /*
+  @bearer string token that allow to authenticate request
+  @redisClient object connect redis db to store cache
+  @expiry number time when cache expires
+   */
   constructor(bearer, redisClient, expiry) {
     this.bearer = bearer;
     this.redisClient = redisClient;
@@ -20,10 +29,8 @@ class Darksky {
         }
 
         if (data !== null) {
-          console.log('in Darksky cache');
           resolve(JSON.parse(data));
         } else {
-          console.log('not in Darksky cache');
           const queries = querystring.stringify({
             lang,
             exclude: 'minutely,hourly,alerts',

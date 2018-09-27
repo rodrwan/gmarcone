@@ -19,6 +19,7 @@ FROM node:alpine AS release
 WORKDIR /app
 COPY darksky/ /app/darksky
 COPY geocode/ /app/geocode
+COPY restcountries/ /app/restcountries
 COPY routes/ /app/routes
 COPY server.js /app
 # optional
