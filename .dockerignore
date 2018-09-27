@@ -1,0 +1,10 @@
+.git
+.idea
+node_modules
+.editorconfig
+.env
+.eslintrc
+.prettierrc
+.gitignore
+README.md
+sample.env
