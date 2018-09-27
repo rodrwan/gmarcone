@@ -21,7 +21,7 @@ const darkskyRequest = (darkskyClient, geocodeClient, restcountriesClient) => as
       throw new Error('retryable error');
     }
   } catch (err) {
-    return darkskyRequest(darkskyClient, geocodeClient)(req, res);
+    return darkskyRequest(darkskyClient, geocodeClient, restcountriesClient)(req, res);
   }
 
   const response = {};
