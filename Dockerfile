@@ -28,7 +28,6 @@ COPY --from=dependencies /app/package.json ./
 # Install app dependencies
 RUN yarn install --production
 COPY --from=build /app ./
-RUN ls
 EXPOSE 3001
 
 CMD ["node", "server.js"]

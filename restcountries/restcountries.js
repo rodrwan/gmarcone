@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-
+const { escape } = require('querystring');
 const { RESTCOUNTRIES_API_URL } = process.env;
 
 /*
@@ -20,7 +20,7 @@ class Restcountries {
 
   getCountryData(name) {
     return new Promise((resolve, reject) => {
-      fetch(`${RESTCOUNTRIES_API_URL}/name/${name}?fields=capital`, {
+      fetch(`${RESTCOUNTRIES_API_URL}/name/${escape(name)}?fields=capital`, {
         headers: {
           'Content-type': 'application/json'
         }

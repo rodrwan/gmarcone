@@ -31,21 +31,25 @@ const darkskyRequest = (darkskyClient, geocodeClient, restcountriesClient) => as
     res.status(400).json({ error: 'bad request' });
     return;
   }
+
+  let geoCapital = {};
   // get capital city of the given country
   try {
-    geoCapital = await restcountriesClient.getCountryData(countryResult.name);
+    const country = countryResult.name === 'Estados Unidos' ? 'USA' : countryResult.name;
+    geoCapital = await restcountriesClient.getCountryData(country);
   } catch (err) {
     // If this happens its mean that the coords doesn't exists or darksky doesn't have them.
     res.status(500).json({ error: 'internal server error' });
     return;
   }
 
+  let geoResult = {};
   // with the capital city get the right location of it.
-  const geoResult = await geocodeClient.getCapitalData(
-    countryResult.name,
-    geoCapital.capital,
-    lang
-  );
+  if (typeof geoCapital === 'undefined') {
+    geoResult = await geocodeClient.getCapitalData(countryResult.name, countryResult.name, lang);
+  } else {
+    geoResult = await geocodeClient.getCapitalData(countryResult.name, geoCapital.capital, lang);
+  }
 
   if (!geoResult.hasOwnProperty('name')) {
     res.status(400).json({ error: 'bad request' });
