@@ -25,15 +25,22 @@ const darkskyRequest = (darkskyClient, geocodeClient, restcountriesClient) => as
   }
 
   const response = {};
+  let err, countryResult;
   // Get country information, in this case the relevant data is: country name
-  const countryResult = await geocodeClient.getCountryData(latitude, longitude, lang);
+  [err, countryResult] = await geocodeClient.getCountryData(latitude, longitude, lang);
+  if (err) {
+    // If this happens its mean that the coords doesn't exists or restcountries doesn't have them.
+    res.status(500).json({ error: 'internal server error' });
+    return;
+  }
+
   if (!countryResult.hasOwnProperty('name')) {
     res.status(400).json({ error: 'bad request' });
     return;
   }
 
   // get capital city of the given country
-  let err, geoCapital;
+  let geoCapital;
   const country = countryResult.name === 'Estados Unidos' ? 'USA' : countryResult.name;
   [err, geoCapital] = await restcountriesClient.getCountryData(country);
   if (err) {
@@ -50,9 +57,23 @@ const darkskyRequest = (darkskyClient, geocodeClient, restcountriesClient) => as
   let geoResult = {};
   // with the capital city get the right location of it.
   if (typeof geoCapital === 'undefined') {
-    geoResult = await geocodeClient.getCapitalData(countryResult.name, countryResult.name, lang);
+    [err, geoResult] = await geocodeClient.getCapitalData(
+      countryResult.name,
+      countryResult.name,
+      lang
+    );
   } else {
-    geoResult = await geocodeClient.getCapitalData(countryResult.name, geoCapital.capital, lang);
+    [err, geoResult] = await geocodeClient.getCapitalData(
+      countryResult.name,
+      geoCapital.capital,
+      lang
+    );
+  }
+
+  if (err) {
+    // If this happens its mean that the coords doesn't exists or restcountries doesn't have them.
+    res.status(500).json({ error: 'internal server error' });
+    return;
   }
 
   if (!geoResult.hasOwnProperty('name')) {
