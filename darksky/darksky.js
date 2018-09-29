@@ -20,46 +20,47 @@ class Darksky {
   }
 
   forecast(latitude, longitude, lang) {
-    return new Promise((resolve, reject) => {
-      const key = `${latitude},${longitude}#${lang}`;
-      this.redisClient.get(key, (err, data) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+    return new Promise(async resolve => {
+      const key = `${latitude},${longitude}`;
+      const [err, data] = await this.redisClient.getByKey(key);
+      if (err) {
+        return resolve([err, null]);
+      }
 
-        if (data !== null) {
-          resolve(JSON.parse(data));
-        } else {
-          const queries = querystring.stringify({
-            lang,
-            exclude: 'minutely,hourly,alerts',
-            units: 'si'
-          });
+      if (data !== null) {
+        console.log('Darksky: get data from redis');
+        return resolve([null, JSON.parse(data)]);
+      }
 
-          const URL = `${DARKSKY_API_URL}/${this.bearer}/${latitude},${longitude}?${queries}`;
-          fetch(URL)
-            .then(res => {
-              const calls = parseInt(res.headers.get('X-Forecast-API-Calls'), 10);
-
-              if (calls > parseInt(DARKSKY_API_CALLS, 10)) {
-                return reject(new Error('Service unavailable'));
-              }
-              return res.json();
-            })
-            .then(res => {
-              // set redis cache in seconds 'EX'
-              this.redisClient.set(key, JSON.stringify(res), 'EX', this.expiry);
-              if (res.hasOwnProperty('code')) {
-                if (res.code === 400) {
-                  return reject(new Error('bad request'));
-                }
-              }
-              resolve(res);
-            })
-            .catch(err => reject(err));
-        }
+      const queries = querystring.stringify({
+        lang,
+        exclude: 'minutely,hourly,alerts',
+        units: 'si'
       });
+
+      const URL = `${DARKSKY_API_URL}/${this.bearer}/${latitude},${longitude}?${queries}`;
+
+      fetch(URL)
+        .then(res => {
+          const calls = parseInt(res.headers.get('X-Forecast-API-Calls'), 10);
+
+          if (calls > parseInt(DARKSKY_API_CALLS, 10)) {
+            return Promise.reject(new Error('Service unavailable'));
+          }
+          return res.json();
+        })
+        .then(async res => {
+          // set redis cache in seconds 'EX'
+          await this.redisClient.setWithExpiry(key, JSON.stringify(res), this.expiry);
+          if (res.hasOwnProperty('code')) {
+            if (res.code === 400) {
+              return Promise.reject(new Error('bad request'));
+            }
+          }
+
+          return resolve([null, res]);
+        })
+        .catch(err => resolve([err, null]));
     });
   }
 }

@@ -19,16 +19,35 @@ class Restcountries {
   }
 
   getCountryData(name) {
-    return new Promise((resolve, reject) => {
-      fetch(`${RESTCOUNTRIES_API_URL}/name/${escape(name)}?fields=capital`, {
+    return new Promise(resolve => {
+      const URL = `${RESTCOUNTRIES_API_URL}/name/${escape(name)}?fields=capital`;
+      fetch(URL, {
         headers: {
           'Content-type': 'application/json'
         }
       })
         .then(res => res.json())
-        .then(res => {
-          resolve(res[0]);
-        });
+        .then(async res => {
+          if (res.hasOwnProperty('status')) {
+            if (res.status === 404) {
+              return resolve([null, {}]);
+            }
+          }
+          const key = `${name}`;
+          const [err, data] = await this.redisClient.getByKey(key);
+          if (err) {
+            return resolve([err, null]);
+          }
+
+          if (data !== null) {
+            console.log('Restcountries: get data from redis');
+            resolve([null, JSON.parse(data)]);
+          } else {
+            await this.redisClient.setWithExpiry(key, JSON.stringify(res[0]), this.expiry);
+            resolve([null, res[0]]);
+          }
+        })
+        .catch(err => resolve([err, null]));
     });
   }
 }

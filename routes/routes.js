@@ -13,7 +13,7 @@ const appRouter = (darkskyClient, geocodeClient, restcountriesClient) => {
 
 const darkskyRequest = (darkskyClient, geocodeClient, restcountriesClient) => async (req, res) => {
   const { latitude, longitude, lang } = req.query;
-  // Simulate a random approach for request error.
+  // Simulate a random error for current request.
   // If this is the case, we need to retry the request until it wont fail.
   try {
     if (Math.random(0, 1) <= 0.1) {
@@ -32,13 +32,17 @@ const darkskyRequest = (darkskyClient, geocodeClient, restcountriesClient) => as
     return;
   }
 
-  let geoCapital = {};
   // get capital city of the given country
-  try {
-    const country = countryResult.name === 'Estados Unidos' ? 'USA' : countryResult.name;
-    geoCapital = await restcountriesClient.getCountryData(country);
-  } catch (err) {
-    // If this happens its mean that the coords doesn't exists or darksky doesn't have them.
+  let err, geoCapital;
+  const country = countryResult.name === 'Estados Unidos' ? 'USA' : countryResult.name;
+  [err, geoCapital] = await restcountriesClient.getCountryData(country);
+  if (err) {
+    // If this happens its mean that the coords doesn't exists or restcountries doesn't have them.
+    res.status(500).json({ error: 'internal server error' });
+    return;
+  }
+
+  if (!geoCapital.hasOwnProperty('capital')) {
     res.status(500).json({ error: 'internal server error' });
     return;
   }
@@ -57,14 +61,16 @@ const darkskyRequest = (darkskyClient, geocodeClient, restcountriesClient) => as
   }
 
   Object.assign(response, { ...geoResult });
-  try {
-    const result = await darkskyClient.forecast(geoResult.latitude, geoResult.longitude, lang);
-    Object.assign(response, { ...result });
-  } catch (err) {
+
+  let result;
+  [err, result] = await darkskyClient.forecast(geoResult.latitude, geoResult.longitude, lang);
+  if (err) {
     // If this happens its mean that the coords doesn't exists or darksky doesn't have them.
     res.status(500).json({ error: 'internal server error' });
     return;
   }
+
+  Object.assign(response, { ...result });
 
   res.json(response);
   return;

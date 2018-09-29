@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const redis = require('redis');
+const Redis = require('./redis/redis');
 const morgan = require('morgan');
 
 const Darksky = require('./darksky/darksky');
@@ -31,7 +31,7 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(morgan(':method :url :response-time'));
 
-const redisClient = redis.createClient(REDIS_PORT, REDIS_HOST);
+const redisClient = new Redis(REDIS_PORT, REDIS_HOST);
 const darkskyClient = new Darksky(DARKSKY_TOKEN, redisClient, CACHE_INTERVAL);
 const geocodeClient = new GeoCode(GEOCODE_API_TOKEN, redisClient, CACHE_INTERVAL);
 const restcountriesClient = new Restcountries(redisClient, CACHE_INTERVAL);
